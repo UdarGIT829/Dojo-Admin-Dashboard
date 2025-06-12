@@ -10,10 +10,14 @@ from PyQt5.QtWidgets import (
 
 import qdarkstyle
 
-from Admin_Focus import get_admin_focus
+# Autoruns importer.py
+import importer
 
+from Admin_Focus import get_admin_focus
 from Weekly_Focus import get_weekly_focus
 from Student_Focus import get_student_focus, get_all_students
+
+
 
 
 
