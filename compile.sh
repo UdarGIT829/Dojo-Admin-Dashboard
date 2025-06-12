@@ -1,0 +1,1 @@
+pyinstaller --noconfirm --onefile --windowed ui_test.py
