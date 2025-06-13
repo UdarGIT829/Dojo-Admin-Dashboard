@@ -58,7 +58,12 @@ def get_admin_focus(db_path="dojo_attendance.sqlite"):
 
         likelihood = round(on_this_day / total, 4)
         days_ago = (last_db_date - last_seen[name].date()).days
-        on_break = days_ago > 14
+        if days_ago > 30:
+            on_break = 2
+        elif days_ago > 14:
+            on_break = 1
+        else:
+            on_break = 0
 
         expected_students.append({
             "name": name,
@@ -68,8 +73,19 @@ def get_admin_focus(db_path="dojo_attendance.sqlite"):
             "on_break": on_break
         })
 
-    # Sort by descending likelihood, then by recency
-    expected_students.sort(key=lambda s: (-s["likelihood"], s["last_seen_days_ago"]))
+    def name_key(full_name):
+        parts = full_name.strip().split()
+        if len(parts) == 1:
+            return ("", parts[0].lower())
+        return (parts[-1].lower(), parts[0].lower())  # (last, first)
+
+    # Sort by: 1) descending likelihood, 2) last name, 3) first name
+    expected_students.sort(
+        key=lambda s: (
+            -s["likelihood"],
+            *name_key(s["name"])
+        )
+    )
 
     return {
         "day": today_str,

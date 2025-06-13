@@ -5,7 +5,8 @@ from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QLabel, QVBoxLayout,
     QHBoxLayout, QLineEdit, QPushButton, QTabWidget, QTableWidget,
-    QTableWidgetItem, QCompleter, QComboBox, QTextEdit, QFrame, QMenu
+    QTableWidgetItem, QCompleter, QComboBox, QTextEdit, QFrame, QMenu,
+    QCheckBox, QDoubleSpinBox
 )
 
 import qdarkstyle
@@ -188,6 +189,9 @@ class StudentFocusTab(QWidget):
                 item = QTableWidgetItem("✅" if present else "❌")
                 self.weekly_matrix_table.setItem(i, j + 1, item)
 
+        self.weekly_matrix_table.resizeColumnsToContents()
+
+
         # Arrival stats
         at = data["arrival_time"]
         self.arrival_table.setRowCount(1)
@@ -243,15 +247,55 @@ class AdminFocusTab(QWidget):
         self.main_window.student_tab.load_student_data()
 
     def update_summary_box(self):
+        avg_today = f"{self.data['avg_students_today']:.2f}" if self.data["avg_students_today"] is not None else "—"
+        avg_late = f"{self.data['avg_late_students']:.2f}" if self.data["avg_late_students"] is not None else "—"
+
         self.summary_box.setHtml(
             f"<b>Today:</b> {self.data['day']} ({self.data['now']})<br>"
-            f"<b>Avg students on {self.data['day']}s:</b> {self.data['avg_students_today']:.2f}<br>"
-            f"<b>Avg students arriving after now:</b> {self.data['avg_late_students']:.2f}"
+            f"<b>Avg students on {self.data['day']}s:</b> {avg_today}<br>"
+            f"<b>Avg students arriving after now:</b> {avg_late}"
         )
 
+    def populate_student_table(self):
+        students = self.data["expected_students"]
+        self.student_table.setRowCount(len(students))
+
+        for i, s in enumerate(students):
+            self.student_table.setItem(i, 0, QTableWidgetItem(s["name"]))
+            self.student_table.setItem(i, 1, QTableWidgetItem(str(s["visits"])))
+            self.student_table.setItem(i, 2, QTableWidgetItem(str(s["last_seen_days_ago"])))
+            self.student_table.setItem(i, 3, QTableWidgetItem(f"{s['likelihood']:.2%}"))
+
+            _breakChar = {0: "—", 1: "💤", 2: "🚫"}
+            break_item = QTableWidgetItem(_breakChar.get(s["on_break"]))
+            if s["on_break"] > 1:
+                break_item.setForeground(Qt.red)
+            elif s["on_break"] > 0:
+                break_item.setForeground(Qt.blue)
+            self.student_table.setItem(i, 4, break_item)
+        self.student_table.resizeColumnsToContents()
+
     def update_focus_data(self):
-        self.data = get_admin_focus()
+        raw_data = get_admin_focus()
+
+        show_break1 = self.break1_checkbox.isChecked()
+        show_break2 = self.break2_checkbox.isChecked()
+        min_likelihood = self.min_likelihood_box.value()
+
+        filtered_students = [
+            s for s in raw_data["expected_students"]
+            if s["likelihood"] >= min_likelihood and (
+                s["on_break"] == 0 or
+                (s["on_break"] == 1 and show_break1) or
+                (s["on_break"] == 2 and show_break2)
+            )
+        ]
+
+        self.data = raw_data.copy()
+        self.data["expected_students"] = filtered_students
+
         self.update_summary_box()
+        self.populate_student_table()
 
     def init_ui(self):
         self.data = get_admin_focus()
@@ -268,7 +312,7 @@ class AdminFocusTab(QWidget):
         self.summary_box.setHtml(
             f"<b>Today:</b> {self.data['day']} ({self.data['now']})<br>"
             f"<b>Avg students on {self.data['day']}s:</b> {self.data['avg_students_today']:.2f}<br>"
-            f"<b>Avg students arriving after now:</b> {self.data['avg_late_students']:.2f}"
+            f"<b>Avg students arriving after now:</b> {self.data['avg_late_students']}"
         )
         top_layout.addWidget(top_title)
         top_layout.addWidget(self.summary_box)
@@ -303,19 +347,36 @@ class AdminFocusTab(QWidget):
         right_title = QLabel("👥 Expected Students Today")
         right_title.setStyleSheet("font-weight: bold;")
 
+        self.break1_checkbox = QCheckBox("Show 💤 (Short Break)")
+        self.break1_checkbox.setChecked(True)
+        self.break1_checkbox.stateChanged.connect(self.update_focus_data)
+
+        self.break2_checkbox = QCheckBox("Show 🚫 (Long Break)")
+        self.break2_checkbox.setChecked(True)
+        self.break2_checkbox.stateChanged.connect(self.update_focus_data)
+
+        self.min_likelihood_box = QDoubleSpinBox()
+        self.min_likelihood_box.setRange(0.0, 1.0)
+        self.min_likelihood_box.setSingleStep(0.05)
+        self.min_likelihood_box.setValue(0.0)
+        self.min_likelihood_box.setPrefix("Min Likelihood: ")
+        self.min_likelihood_box.setDecimals(2)
+        self.min_likelihood_box.valueChanged.connect(self.update_focus_data)
+
+
+        checkbox_row = QHBoxLayout()
+        checkbox_row.addWidget(self.break1_checkbox)
+        checkbox_row.addWidget(self.break2_checkbox)
+        checkbox_row.addWidget(self.min_likelihood_box)
+
+        right_layout.addLayout(checkbox_row)
+
         self.student_table = QTableWidget()
         students = self.data["expected_students"]
-        self.student_table.setColumnCount(4)
-        self.student_table.setHorizontalHeaderLabels(["Name", "Visits", "Days Ago", "Break?"])
+        self.student_table.setColumnCount(5)
+        self.student_table.setHorizontalHeaderLabels(["Name", "Visits", "Days Ago", "Likelihood", "Break?"])
         self.student_table.setRowCount(len(students))
-        for i, s in enumerate(students):
-            self.student_table.setItem(i, 0, QTableWidgetItem(s["name"]))
-            self.student_table.setItem(i, 1, QTableWidgetItem(str(s["visits"])))
-            self.student_table.setItem(i, 2, QTableWidgetItem(str(s["last_seen_days_ago"])))
-            break_item = QTableWidgetItem("✅" if s["on_break"] else "—")
-            if s["on_break"]:
-                break_item.setForeground(Qt.red)
-            self.student_table.setItem(i, 3, break_item)
+        self.populate_student_table()
 
         self.student_table.setContextMenuPolicy(Qt.CustomContextMenu)
         self.student_table.customContextMenuRequested.connect(self.show_context_menu)
@@ -335,6 +396,8 @@ class AdminFocusTab(QWidget):
         main_layout.addWidget(self.top_panel)
         main_layout.addWidget(bottom_panel)
         self.setLayout(main_layout)
+
+        self.populate_student_table()
 
 class AdminConsole(QMainWindow):
     def __init__(self):
