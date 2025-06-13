@@ -13,7 +13,7 @@ def get_admin_focus(db_path="dojo_attendance.sqlite"):
     current_hour_float = now.hour + now.minute / 60
 
     # Fetch ALL attendance records
-    cur.execute("SELECT student_name, date, day_of_week, start_unix FROM attendance")
+    cur.execute("SELECT student_name, date, day_of_week, start_unix, belt, is_upper_belt FROM attendance")
     all_rows = cur.fetchall()
 
     # Fetch most recent attendance date
@@ -25,16 +25,20 @@ def get_admin_focus(db_path="dojo_attendance.sqlite"):
     total_attendance = defaultdict(int)
     weekday_attendance = defaultdict(lambda: defaultdict(int))  # student -> day -> count
     last_seen = {}
+    last_belt = {}
+    last_upper = {}
     visits_per_week = defaultdict(set)
     late_visits_per_week = defaultdict(set)
 
-    for name, date_str, day, start_unix in all_rows:
+    for name, date_str, day, start_unix, belt_level, is_upper_belt in all_rows:
         total_attendance[name] += 1
         weekday_attendance[name][day] += 1
 
         dt = datetime.strptime(date_str, "%Y-%m-%d")
         if name not in last_seen or dt > last_seen[name]:
             last_seen[name] = dt
+            last_belt[name] = belt_level
+            last_upper[name] = is_upper_belt
 
         # Only use rows matching today's weekday for weekly aggregates
         if day == today_str:
@@ -70,7 +74,9 @@ def get_admin_focus(db_path="dojo_attendance.sqlite"):
             "visits": on_this_day,
             "likelihood": likelihood,
             "last_seen_days_ago": days_ago,
-            "on_break": on_break
+            "on_break": on_break,
+            "belt": last_belt.get(name, "—"),
+            "is_upper_belt": last_upper.get(name, False)
         })
 
     def name_key(full_name):

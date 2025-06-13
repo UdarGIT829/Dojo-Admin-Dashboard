@@ -219,13 +219,34 @@ class StudentFocusTab(QWidget):
 
 
 
+def belt_passes(student, belt_filter):
+    mode = belt_filter.get("mode")
+    if mode == "any":
+        return True
+    elif mode == "lower":
+        return not student.get("is_upper_belt", False)
+    elif mode == "upper":
+        return student.get("is_upper_belt", False)
+    elif mode == "min_rank":
+        student_rank = self.BELT_RANK_MAP.get(student.get("belt", ""), -1)
+        return student_rank >= belt_filter["rank"]
+    return True  # fallback
+
 
 
 class AdminFocusTab(QWidget):
     def __init__(self, parent=None):
         super().__init__()
         self.main_window = parent
+
+        self.BELT_RANKS = [
+            "White", "Yellow", "Orange", "Green", "Blue", "Purple", "Brown", "Red", "Black"
+        ]
+        self.BELT_RANK_MAP = {belt: i for i, belt in enumerate(self.BELT_RANKS)}
+
+
         self.init_ui()
+
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_focus_data)
@@ -274,6 +295,7 @@ class AdminFocusTab(QWidget):
             self.student_table.setItem(i, 1, QTableWidgetItem(str(s["visits"])))
             self.student_table.setItem(i, 2, QTableWidgetItem(str(s["last_seen_days_ago"])))
             self.student_table.setItem(i, 3, QTableWidgetItem(f"{s['likelihood']:.2%}"))
+            self.student_table.setItem(i, 4, QTableWidgetItem(str(s.get("belt", "—"))))
 
             _breakChar = {0: "—", 1: "💤", 2: "🚫"}
             break_item = QTableWidgetItem(_breakChar.get(s["on_break"]))
@@ -281,7 +303,7 @@ class AdminFocusTab(QWidget):
                 break_item.setForeground(Qt.red)
             elif s["on_break"] > 0:
                 break_item.setForeground(Qt.blue)
-            self.student_table.setItem(i, 4, break_item)
+            self.student_table.setItem(i, 5, break_item)
         self.student_table.resizeColumnsToContents()
 
     def update_focus_data(self):
@@ -290,14 +312,15 @@ class AdminFocusTab(QWidget):
         show_break1 = self.break1_checkbox.isChecked()
         show_break2 = self.break2_checkbox.isChecked()
         min_likelihood = self.min_likelihood_box.value()
+        belt_filter = self.min_belt_dropdown.currentData()
 
         filtered_students = [
             s for s in raw_data["expected_students"]
-            if s["likelihood"] >= min_likelihood and (
-                s["on_break"] == 0 or
+            if s["likelihood"] >= min_likelihood and
+            (s["on_break"] == 0 or
                 (s["on_break"] == 1 and show_break1) or
-                (s["on_break"] == 2 and show_break2)
-            )
+                (s["on_break"] == 2 and show_break2)) and
+            belt_passes(s, belt_filter)
         ]
 
         self.data = raw_data.copy()
@@ -372,18 +395,31 @@ class AdminFocusTab(QWidget):
         self.min_likelihood_box.setDecimals(2)
         self.min_likelihood_box.valueChanged.connect(self.update_focus_data)
 
+        self.min_belt_dropdown = QComboBox()
+        self.min_belt_dropdown.addItem("Any Belt", {"mode": "any"})  # Special value for no filter
+        self.min_belt_dropdown.addItem("Only Lower Belts", {"mode": "lower"})
+        self.min_belt_dropdown.addItem("Only Upper Belts", {"mode": "upper"})
+        
+        # Add specific minimum belt ranks
+        for belt, rank in self.BELT_RANK_MAP.items():
+            self.min_belt_dropdown.addItem(f"Min Belt: {belt}", {"mode": "min_rank", "rank": rank})
+
+        self.min_belt_dropdown.currentIndexChanged.connect(self.update_focus_data)
+
 
         checkbox_row = QHBoxLayout()
         checkbox_row.addWidget(self.break1_checkbox)
         checkbox_row.addWidget(self.break2_checkbox)
         checkbox_row.addWidget(self.min_likelihood_box)
+        checkbox_row.addWidget(self.min_belt_dropdown)
+
 
         right_layout.addLayout(checkbox_row)
 
         self.student_table = QTableWidget()
         students = self.data["expected_students"]
-        self.student_table.setColumnCount(5)
-        self.student_table.setHorizontalHeaderLabels(["Name", "Visits", "Days Ago", "Likelihood", "Break?"])
+        self.student_table.setColumnCount(6)
+        self.student_table.setHorizontalHeaderLabels(["Name", "Visits", "Days Ago", "Likelihood", "Belt", "Break?"])
         self.student_table.setRowCount(len(students))
         self.populate_student_table()
 
