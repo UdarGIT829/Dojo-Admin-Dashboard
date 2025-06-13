@@ -63,6 +63,8 @@ class WeeklyFocusTab(QWidget):
         layout.addWidget(label)
         layout.addWidget(table)
         self.setLayout(layout)
+        table.resizeColumnsToContents()
+
 
 
 
@@ -117,6 +119,7 @@ class StudentFocusTab(QWidget):
         self.arrival_table = QTableWidget()
         self.arrival_table.setColumnCount(5)
         self.arrival_table.setHorizontalHeaderLabels(["Avg Arrival", "Q1", "Q3", "Std Dev (Hours)", "Variance"])
+        self.arrival_table.setVerticalHeaderLabels(["Weekdays", "Saturday"])
 
         # Layout
         layout.addWidget(title)
@@ -194,12 +197,18 @@ class StudentFocusTab(QWidget):
 
         # Arrival stats
         at = data["arrival_time"]
-        self.arrival_table.setRowCount(1)
-        self.arrival_table.setItem(0, 0, QTableWidgetItem(float_to_ampm(at["average"])))
-        self.arrival_table.setItem(0, 1, QTableWidgetItem(float_to_ampm(at["q1"])))
-        self.arrival_table.setItem(0, 2, QTableWidgetItem(float_to_ampm(at["q3"])))
-        self.arrival_table.setItem(0, 3, QTableWidgetItem(str(at["std_dev"] or "—")))
-        self.arrival_table.setItem(0, 4, QTableWidgetItem(str(at["variance"] or "—")))
+        self.arrival_table.setRowCount(2)
+        labels = ["Weekdays", "Saturday"]
+        for i, key in enumerate(["weekday", "saturday"]):
+            stats = at.get(key, {})
+            self.arrival_table.setItem(i, 0, QTableWidgetItem(float_to_ampm(stats.get("average"))))
+            self.arrival_table.setItem(i, 1, QTableWidgetItem(float_to_ampm(stats.get("q1"))))
+            self.arrival_table.setItem(i, 2, QTableWidgetItem(float_to_ampm(stats.get("q3"))))
+            self.arrival_table.setItem(i, 3, QTableWidgetItem(str(stats.get("std_dev") or "—")))
+            self.arrival_table.setItem(i, 4, QTableWidgetItem(str(stats.get("variance") or "—")))
+        
+        self.arrival_table.setVerticalHeaderLabels(["Weekdays", "Saturday"])
+
 
     def clear_tables(self):
         self.likelihood_table.setRowCount(0)

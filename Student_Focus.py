@@ -71,15 +71,36 @@ def get_student_focus(student_name, db_path="dojo_attendance.sqlite"):
             week_keys.add(key)
         weekday_week_keys[day] = sorted(week_keys)
 
-    arrival_hours = [t.hour + t.minute / 60 for t in arrival_times]
-    if len(arrival_hours) >= 2:
-        q1, q3 = statistics.quantiles(arrival_hours, n=4)[0], statistics.quantiles(arrival_hours, n=4)[2]
-        std_dev = statistics.stdev(arrival_hours)
-        var = statistics.variance(arrival_hours)
-    else:
-        q1 = q3 = std_dev = var = None
+    weekday_hours = []
+    saturday_hours = []
 
-    avg_arrival = round(statistics.mean(arrival_hours), 2) if arrival_hours else None
+    for date, day, start_unix in rows:
+        hour_val = datetime.fromtimestamp(start_unix).hour + datetime.fromtimestamp(start_unix).minute / 60
+        if day == "Sat":
+            saturday_hours.append(hour_val)
+        else:
+            weekday_hours.append(hour_val)
+
+    def compute_arrival_stats(hour_list):
+        if len(hour_list) >= 2:
+            q1, q3 = statistics.quantiles(hour_list, n=4)[0], statistics.quantiles(hour_list, n=4)[2]
+            std_dev = statistics.stdev(hour_list)
+            var = statistics.variance(hour_list)
+        else:
+            q1 = q3 = std_dev = var = None
+        avg = round(statistics.mean(hour_list), 2) if hour_list else None
+        return {
+            "average": avg,
+            "q1": round(q1, 2) if q1 is not None else None,
+            "q3": round(q3, 2) if q3 is not None else None,
+            "std_dev": round(std_dev, 2) if std_dev is not None else None,
+            "variance": round(var, 2) if var is not None else None
+        }
+
+    arrival_time = {
+        "weekday": compute_arrival_stats(weekday_hours),
+        "saturday": compute_arrival_stats(saturday_hours)
+    }
 
     last_visit_date = max(datetime.strptime(date, "%Y-%m-%d") for date, _, _ in rows).date()
     days_since_last_seen = (latest_db_date - last_visit_date).days
@@ -114,11 +135,5 @@ def get_student_focus(student_name, db_path="dojo_attendance.sqlite"):
         "weekly_presence_matrix": dict(weekday_presence_matrix),
         "week_columns": sorted_week_columns,
 
-        "arrival_time": {
-            "average": avg_arrival,
-            "q1": round(q1, 2) if q1 is not None else None,
-            "q3": round(q3, 2) if q3 is not None else None,
-            "std_dev": round(std_dev, 2) if std_dev is not None else None,
-            "variance": round(var, 2) if var is not None else None
-        }
+        "arrival_time": arrival_time
     }
