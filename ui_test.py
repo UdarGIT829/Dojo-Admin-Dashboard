@@ -24,10 +24,10 @@ from Student_Focus import get_student_focus, get_all_students
 
 def format_week_range_label(week_key):
     year, week = map(int, week_key.split("-W"))
-    # Monday of the ISO week
     monday = datetime.strptime(f'{year}-W{week}-1', "%G-W%V-%u")
     sunday = monday + timedelta(days=6)
-    return f"{monday.strftime('%b %-d')}–{sunday.strftime('%b %-d')} ({week_key})"
+    return f"{monday.strftime('%b')} {monday.day}–{sunday.strftime('%b')} {sunday.day} ({week_key})"
+
 
 def float_to_ampm(hour_float):
     if hour_float is None:
@@ -219,18 +219,6 @@ class StudentFocusTab(QWidget):
 
 
 
-def belt_passes(student, belt_filter):
-    mode = belt_filter.get("mode")
-    if mode == "any":
-        return True
-    elif mode == "lower":
-        return not student.get("is_upper_belt", False)
-    elif mode == "upper":
-        return student.get("is_upper_belt", False)
-    elif mode == "min_rank":
-        student_rank = self.BELT_RANK_MAP.get(student.get("belt", ""), -1)
-        return student_rank >= belt_filter["rank"]
-    return True  # fallback
 
 
 
@@ -251,6 +239,20 @@ class AdminFocusTab(QWidget):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_focus_data)
         self.timer.start(30_000)  # 30 seconds in milliseconds
+
+
+    def belt_passes(self,student, belt_filter):
+        mode = belt_filter.get("mode")
+        if mode == "any":
+            return True
+        elif mode == "lower":
+            return not student.get("is_upper_belt", False)
+        elif mode == "upper":
+            return student.get("is_upper_belt", False)
+        elif mode == "min_rank":
+            student_rank = self.BELT_RANK_MAP.get(student.get("belt", ""), -1)
+            return student_rank >= belt_filter["rank"]
+        return True  # fallback
 
     def show_context_menu(self, pos):
         index = self.student_table.indexAt(pos)
@@ -320,7 +322,7 @@ class AdminFocusTab(QWidget):
             (s["on_break"] == 0 or
                 (s["on_break"] == 1 and show_break1) or
                 (s["on_break"] == 2 and show_break2)) and
-            belt_passes(s, belt_filter)
+            self.belt_passes(s, belt_filter)
         ]
 
         self.data = raw_data.copy()
