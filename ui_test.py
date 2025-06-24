@@ -463,8 +463,32 @@ class AdminConsole(QMainWindow):
 
 
 if __name__ == "__main__":
+    from PyQt5.QtCore import QCoreApplication, QLibraryInfo
+    from PyQt5.QtGui import QFont
+    import ctypes
+
+    # Enable High DPI scaling (must be set before QApplication is created)
+    QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+    QCoreApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+
+    # Optional: Enable DPI awareness on Windows (especially useful for 4K)
+    try:
+        ctypes.windll.shcore.SetProcessDpiAwareness(1)  # SYSTEM_AWARE
+    except Exception:
+        pass
+
     app = QApplication(sys.argv)
+
+    # Apply a global font scale factor based on DPI
+    screen = app.primaryScreen()
+    dpi = screen.logicalDotsPerInch()
+    scale_factor = dpi / 96  # 96 DPI is baseline
+    default_font = app.font()
+    default_font.setPointSizeF(default_font.pointSizeF() * scale_factor)
+    app.setFont(default_font)
+
     app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
+
     window = AdminConsole()
     window.show()
     sys.exit(app.exec_())
