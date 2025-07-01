@@ -1,5 +1,6 @@
 import asyncio
 import discord
+from discord import Activity, ActivityType, Status
 from discord_utils import iterate_over_guild   # your existing helper
 from pathlib import Path
 
@@ -27,15 +28,26 @@ async def _fetch_threads():
     STUDENT_THREADS = student_threads       # replace atomically
 
 async def pull_threads_once():
-    """Refresh STUDENT_THREADS one time; safe to await from outside."""
     global PULL_IN_PROGRESS
     if PULL_IN_PROGRESS:
-        print("PULL Already running!")
-        return                              # already running
+        return
     PULL_IN_PROGRESS = True
+
     try:
+        # Show status: Watching "student threads..."
+        await _client.change_presence(
+            activity=Activity(type=ActivityType.watching, name="student threads"),
+            status=Status.online
+        )
+
         await _fetch_threads()
+
     finally:
+        # Reset status back to default (clear activity)
+        await _client.change_presence(
+            activity=None,
+            status=Status.online
+        )
         PULL_IN_PROGRESS = False
         print(f"Pulled {len(list(STUDENT_THREADS.keys()))} threads.")
 
