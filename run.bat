@@ -12,8 +12,7 @@ call .venv\Scripts\activate.bat
 
 :: Install dependencies
 echo Installing Python packages...
-pip install --quiet --upgrade pip
-pip install --quiet -r requirements.txt
+pip install -r requirements.txt
 
 :: Run the application
 echo Launching Attendance Manager...
