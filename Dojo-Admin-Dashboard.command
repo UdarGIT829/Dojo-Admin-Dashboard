@@ -2,6 +2,11 @@
 
 cd "$(dirname "$0")"  # Ensure script runs from its own folder
 
+if [ -d ".git" ]; then
+  echo "Checking for updates..."
+  git pull --quiet
+fi
+
 # Create virtual environment if needed
 if [ ! -d ".venv" ]; then
   echo "Creating virtual environment..."

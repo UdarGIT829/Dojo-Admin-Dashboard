@@ -1,6 +1,12 @@
 @echo off
 SETLOCAL ENABLEDELAYEDEXPANSION
+cd /d %~dp0
 
+:: Git update
+IF EXIST ".git" (
+    echo Checking for updates...
+    git pull >nul 2>&1
+)
 :: Create virtual environment if it doesn't exist
 IF NOT EXIST ".venv" (
     echo Creating virtual environment...
