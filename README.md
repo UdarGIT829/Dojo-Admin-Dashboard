@@ -41,7 +41,15 @@ It is aimed at instructors and administrators who need a quick, data‑driven sn
 * SQLite (bundled with Python)
   *Optional:* Git for cloning the repository
 
-### 2  Installation
+### 2  Installation 
+
+#### One-click (Easy)
+* Use the one-click scripts based on your OS:
+- Windows:  `Dojo-Admin-Dashboard.bat`
+- Mac:      `Dojo-Admin-Dashboard.command`
+- Linux:    `Dojo-Admin-Dashboard.sh`
+
+#### From source (Complex)
 
 ```bash
 # Clone the repository
@@ -62,7 +70,11 @@ $ pip install -r requirements.txt
 2. Paste your bot token on the first line—nothing else.
 3. Ensure **MESSAGE CONTENT INTENT** is checked in the Discord Developer Portal.
 
-### 4  Run the application
+* If you don't know how to get the token working, talk to me in person or DM me.
+
+### 4  Run the application (From source)
+
+The application works runs out of the box using the one-click scripts, however if you installed from source you must use the current entrypoint.
 
 ```bash
 $ python ui_test.py
@@ -77,15 +89,16 @@ The main window opens with the Weekly Focus tab selected by default.
 
 ```
 attendance‑manager/
-├── Admin_Focus.py          # Admin utilities and bulk tools
-├── Student_Focus.py        # Student dashboard widgets
-├── Weekly_Focus.py         # Weekly matrix & date‑range widgets
-├── discord_client.py       # Reusable Discord client (background thread)
-├── discord_utils.py        # Helper coroutines for fetching thread history
-├── importer.py             # CSV → SQLite importer
-├── ui_test.py              # Application entry‑point (PyQt)
-├── requirements.txt        # Python dependencies
-└── README.md               # You are here
+├── Admin_Focus.py                          # Admin utilities and bulk tools
+├── Student_Focus.py                        # Student dashboard widgets
+├── Weekly_Focus.py                         # Weekly matrix & date‑range widgets
+├── discord_client.py                       # Reusable Discord client (background thread)
+├── discord_utils.py                        # Helper coroutines for fetching thread history
+├── importer.py                             # CSV → SQLite importer
+├── ui_test.py                              # Application entry‑point (PyQt)
+├── requirements.txt                        # Python dependencies
+└── README.md                               # You are here
+└── Dojo-Admin-Dashboard.[bat/command/sh]   # One-click launcher scripts
 ```
 
 ---
