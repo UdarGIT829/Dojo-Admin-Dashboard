@@ -92,13 +92,14 @@ attendance‑manager/
 
 ## Screenshots *(placeholders)*
 
-> **Replace the image paths once screenshots are captured.**
+## Screenshots
 
-| View                  | File                                                                   |
+| View                  | Screenshot                                                             |
 | --------------------- | ---------------------------------------------------------------------- |
-| Weekly Focus          | `![Weekly Focus Tab](docs/screenshots/Weekly_Focus.png)`               |
-| Student Focus         | `![Student Focus Tab](docs/screenshots/Student_Focus.png)`             |
-| Admin Focus           | `![Admin Focus Tab](docs/screenshots/Admin_Focus.png)` |
+| Weekly Focus          | ![Weekly Focus Tab](docs/screenshots/Weekly_Focus.png)                 |
+| Student Focus         | ![Student Focus Tab](docs/screenshots/Student_Focus.png)               |
+| Admin Focus           | ![Admin Focus Tab](docs/screenshots/Admin_Focus.png)                   |
+
 
 ---
 
