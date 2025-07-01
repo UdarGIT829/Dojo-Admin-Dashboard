@@ -196,3 +196,7 @@ cython_debug/
 # Ignore data files and SQL database
 data/*
 *.sqlite
+
+# Ignore discord token and testing file
+BOT_TOKEN.txt
+discord_testing.py
