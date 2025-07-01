@@ -96,9 +96,9 @@ attendance‑manager/
 
 | View                  | File                                                                   |
 | --------------------- | ---------------------------------------------------------------------- |
-| Main dashboard        | `![Main Dashboard](docs/screenshots/main_dashboard.png)`               |
-| Student Focus         | `![Student Focus Tab](docs/screenshots/student_focus.png)`             |
-| Discord Thread Viewer | `![Discord Thread Viewer](docs/screenshots/discord_thread_viewer.png)` |
+| Weekly Focus          | `![Weekly Focus Tab](docs/screenshots/Weekly_Focus.png)`               |
+| Student Focus         | `![Student Focus Tab](docs/screenshots/Student_Focus.png)`             |
+| Admin Focus           | `![Admin Focus Tab](docs/screenshots/Admin_Focus.png)` |
 
 ---
 

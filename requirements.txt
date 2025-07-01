@@ -1,3 +1,4 @@
 PyQT5
 qdarkstyle
 pyinstaller
+discord
