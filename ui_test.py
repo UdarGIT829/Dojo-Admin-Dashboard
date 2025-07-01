@@ -1,6 +1,6 @@
 import sys
 from datetime import datetime, timedelta, time
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtCore import Qt, QTimer, QThread
 
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QLabel, QVBoxLayout,
@@ -18,6 +18,10 @@ from Admin_Focus import get_admin_focus
 from Weekly_Focus import get_weekly_focus
 from Student_Focus import get_student_focus, get_all_students
 
+# --- Discord thread loader --------------------------------------------------
+import discord_client
+discord_client.start_background_client()
+# ---------------------------------------------------------------------------
 
 
 
@@ -66,13 +70,33 @@ class WeeklyFocusTab(QWidget):
         table.resizeColumnsToContents()
 
 
-
-
 class StudentFocusTab(QWidget):
     def __init__(self):
         super().__init__()
         self.students = get_all_students()
         self.init_ui()
+
+    class _DiscordRefreshThread(QThread):
+        def run(self):
+            import asyncio
+            asyncio.run(discord_client.pull_threads_once())
+
+    def run_thread_refresh(self):
+        self.status_label.setText("Status: Pulling threads…")
+        discord_client.trigger_refresh()          # runs on Discord loop, returns immediately
+
+
+    def update_status_label(self):
+        from discord_client import PULL_IN_PROGRESS
+
+        if PULL_IN_PROGRESS:
+            self.status_label.setText("Status: Pulling threads…")
+            self.refresh_button.setEnabled(False)
+            self.status_timer.setInterval(1000)
+        else:
+            self.status_label.setText("Status: Idle")
+            self.refresh_button.setEnabled(True)
+            self.status_timer.setInterval(3000)
 
     def init_ui(self):
         layout = QVBoxLayout()
@@ -132,7 +156,35 @@ class StudentFocusTab(QWidget):
         layout.addWidget(QLabel("Arrival Time Analysis"))
         layout.addWidget(self.arrival_table)
 
-        self.setLayout(layout)
+        discord_layout = QVBoxLayout()
+        # --- Discord Section ---
+        discord_layout.addWidget(QLabel("⚡🤖 Discord Focus"))
+
+        self.discord_thread_box = QTextEdit()
+        self.discord_thread_box.setReadOnly(True)
+        discord_layout.addWidget(self.discord_thread_box)
+
+        # --- Pull Button ---
+        self.refresh_button = QPushButton("🔄 Refresh Threads")
+        self.refresh_button.clicked.connect(self.run_thread_refresh)
+        discord_layout.addWidget(self.refresh_button)
+
+        # --- Pull Status ---
+        self.status_label = QLabel("Status: Idle")
+        discord_layout.addWidget(self.status_label)
+
+
+        # Combine both into main horizontal layout
+        main_layout = QHBoxLayout()
+        main_layout.addLayout(layout)
+        main_layout.addLayout(discord_layout)
+
+        self.setLayout(main_layout)
+
+        self.status_timer = QTimer(self)
+        self.status_timer.timeout.connect(self.update_status_label)
+        self.status_timer.start(1000)  # start fast
+
 
     def set_input_from_dropdown(self, index):
         if index > 0:  # ignore the placeholder
@@ -208,6 +260,12 @@ class StudentFocusTab(QWidget):
             self.arrival_table.setItem(i, 4, QTableWidgetItem(str(stats.get("variance") or "—")))
         
         self.arrival_table.setVerticalHeaderLabels(["Weekdays", "Saturday"])
+
+        thread = discord_client.STUDENT_THREADS.get(name.lower())
+        if thread:
+            self.discord_thread_box.setPlainText("\n\n".join(thread[-20:]))  # show last 20 messages
+        else:
+            self.discord_thread_box.setPlainText("No thread found.")
 
 
     def clear_tables(self):
