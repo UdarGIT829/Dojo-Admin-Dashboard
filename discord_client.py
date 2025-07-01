@@ -10,7 +10,9 @@ TOKEN_FILE = Path(__file__).with_name("BOT_TOKEN.txt")
 STUDENT_THREADS: dict[str, list[str]] = {}   # {student_name_lower: [msg str, …]}
 PULL_IN_PROGRESS = False                     # simple flag the UI can poll
 # ---------------------------------------------------------------------------
-
+NAME = ""
+with open("name.config", "r") as fi:
+    NAME = fi.read()
 _intents = discord.Intents.default()
 _intents.guilds = True
 _intents.messages = True
@@ -36,7 +38,7 @@ async def pull_threads_once():
     try:
         # Show status: Watching "student threads..."
         await _client.change_presence(
-            activity=Activity(type=ActivityType.watching, name="student threads"),
+            activity=Activity(type=ActivityType.watching, name=f"{NAME} is pulling student threads"),
             status=Status.online
         )
 
