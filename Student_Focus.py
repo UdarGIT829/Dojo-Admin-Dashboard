@@ -18,12 +18,13 @@ def get_student_focus(student_name, db_path="dojo_attendance.sqlite"):
 
     # Fetch all attendance entries for the student
     cur.execute("""
-        SELECT date, day_of_week, start_unix
+        SELECT belt, date, day_of_week, start_unix
         FROM attendance
         WHERE student_name = ?
         ORDER BY date ASC
     """, (student_name,))
     rows = cur.fetchall()
+    student_belt = ""
 
     if not rows:
         conn.close()
@@ -41,7 +42,8 @@ def get_student_focus(student_name, db_path="dojo_attendance.sqlite"):
     weekly_visit_totals = defaultdict(int)
     weekday_weekly_counts = {}
 
-    for date, day, start_unix in rows:
+    for belt, date, day, start_unix in rows:
+        student_belt = belt
         by_day[day].append(date)
         arrival_times.append(datetime.fromtimestamp(start_unix).time())
 
@@ -74,7 +76,7 @@ def get_student_focus(student_name, db_path="dojo_attendance.sqlite"):
     weekday_hours = []
     saturday_hours = []
 
-    for date, day, start_unix in rows:
+    for belt, date, day, start_unix in rows:
         hour_val = datetime.fromtimestamp(start_unix).hour + datetime.fromtimestamp(start_unix).minute / 60
         if day == "Sat":
             saturday_hours.append(hour_val)
@@ -102,7 +104,7 @@ def get_student_focus(student_name, db_path="dojo_attendance.sqlite"):
         "saturday": compute_arrival_stats(saturday_hours)
     }
 
-    last_visit_date = max(datetime.strptime(date, "%Y-%m-%d") for date, _, _ in rows).date()
+    last_visit_date = max(datetime.strptime(date, "%Y-%m-%d") for _,date, _, _ in rows).date()
     days_since_last_seen = (latest_db_date - last_visit_date).days
     on_break = days_since_last_seen > 14
 
@@ -110,7 +112,7 @@ def get_student_focus(student_name, db_path="dojo_attendance.sqlite"):
     weekday_presence_matrix = defaultdict(dict)
     all_week_keys = set()
 
-    for date, day, _ in rows:
+    for _, date, day, _ in rows:
         dt = datetime.strptime(date, "%Y-%m-%d")
         iso_year, iso_week, _ = dt.isocalendar()
         week_key = f"{iso_year}-W{iso_week:02d}"
@@ -122,6 +124,7 @@ def get_student_focus(student_name, db_path="dojo_attendance.sqlite"):
 
     return {
         "student": student_name,
+        "student_belt": student_belt,
         "total_visits": total_visits,
         "weeks_attended": weeks_attended,
         "avg_visits_per_week": avg_visits_per_week,

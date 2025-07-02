@@ -206,6 +206,7 @@ class StudentFocusTab(QWidget):
 
         # Summary with break flag
         summary = (
+            f"<b>Belt: {data['student_belt'].upper()}<br>"
             f"<b>{data['student']}</b> has attended <b>{data['total_visits']}</b> times "
             f"across <b>{data['weeks_attended']}</b> weeks.<br>"
             f"Average visits/week: <b>{data['avg_visits_per_week']}</b><br>"
@@ -286,7 +287,7 @@ class AdminFocusTab(QWidget):
         self.main_window = parent
 
         self.BELT_RANKS = [
-            "White", "Yellow", "Orange", "Green", "Blue", "Purple", "Brown", "Red", "Black"
+            "Junior", "White", "Yellow", "Orange", "Green", "Blue", "Purple", "Brown", "Red", "Black"
         ]
         self.BELT_RANK_MAP = {belt: i for i, belt in enumerate(self.BELT_RANKS)}
 
@@ -303,6 +304,8 @@ class AdminFocusTab(QWidget):
         mode = belt_filter.get("mode")
         if mode == "any":
             return True
+        elif mode == "juniors":
+            return student.get("belt", "") == "Junior"
         elif mode == "lower":
             return not student.get("is_upper_belt", False)
         elif mode == "upper":
@@ -457,6 +460,7 @@ class AdminFocusTab(QWidget):
 
         self.min_belt_dropdown = QComboBox()
         self.min_belt_dropdown.addItem("Any Belt", {"mode": "any"})  # Special value for no filter
+        self.min_belt_dropdown.addItem("Only Juniors", {"mode": "juniors"})
         self.min_belt_dropdown.addItem("Only Lower Belts", {"mode": "lower"})
         self.min_belt_dropdown.addItem("Only Upper Belts", {"mode": "upper"})
         
