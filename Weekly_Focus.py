@@ -4,6 +4,7 @@ import statistics
 from datetime import datetime
 
 UPPER_BELTS = {"Blue", "Purple", "Brown", "Red"}
+JUNIORS = "Junior"
 
 def get_weekly_focus(db_path="dojo_attendance.sqlite"):
     conn = sqlite3.connect(db_path)
@@ -11,6 +12,7 @@ def get_weekly_focus(db_path="dojo_attendance.sqlite"):
 
     # Day -> week_key -> total/upper/lower counts
     totals = defaultdict(lambda: defaultdict(int))
+    juniors = defaultdict(lambda: defaultdict(int))
     uppers = defaultdict(lambda: defaultdict(int))
     lowers = defaultdict(lambda: defaultdict(int))
 
@@ -26,28 +28,36 @@ def get_weekly_focus(db_path="dojo_attendance.sqlite"):
         week_key = f"{iso_year}-W{iso_week:02d}"
 
         totals[day_of_week][week_key] += 1
-        if belt in UPPER_BELTS:
+        if belt == JUNIORS:
+            juniors[day_of_week][week_key] += 1
+        elif belt in UPPER_BELTS:
             uppers[day_of_week][week_key] += 1
         else:
             lowers[day_of_week][week_key] += 1
 
     # Build structured result
-    result = []
+    result = {
+        "allstudent":[],
+        "junior":[],
+        "lower":[],
+        "upper":[],
+        }
+
     for day in ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]:
-        total_counts = list(totals[day].values())
-        upper_counts = list(uppers[day].values())
-        lower_counts = list(lowers[day].values())
+        _Mapping = {
+            "allstudent":list(totals[day].values()), 
+            "junior":list(juniors[day].values()),
+            "lower":list(lowers[day].values()),
+            "upper":list(uppers[day].values())
+        }
 
         def avg(lst): return round(statistics.mean(lst), 2) if lst else None
-
-        row = {
+        for key,val in _Mapping.items():
+            result[key].append( {
             "day": day,
-            "avg_total": avg(total_counts),
-            "std_dev": round(statistics.stdev(total_counts), 2) if len(total_counts) > 1 else None,
-            "variance": round(statistics.variance(total_counts), 2) if len(total_counts) > 1 else None,
-            "avg_lower": avg(lower_counts),
-            "avg_upper": avg(upper_counts),
-        }
-        result.append(row)
+            "avg_total": avg(val),
+            "std_dev": round(statistics.stdev(val), 2) if len(val) > 1 else None,
+            "variance": round(statistics.variance(val), 2) if len(val) > 1 else None,
+        } )
 
     return result

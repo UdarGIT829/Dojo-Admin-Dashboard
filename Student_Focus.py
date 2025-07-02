@@ -112,12 +112,14 @@ def get_student_focus(student_name, db_path="dojo_attendance.sqlite"):
     weekday_presence_matrix = defaultdict(dict)
     all_week_keys = set()
 
-    for _, date, day, _ in rows:
+    for _, date, day, start_unix in rows:
         dt = datetime.strptime(date, "%Y-%m-%d")
         iso_year, iso_week, _ = dt.isocalendar()
         week_key = f"{iso_year}-W{iso_week:02d}"
         all_week_keys.add(week_key)
-        weekday_presence_matrix[day][week_key] = True
+    
+        arrival_time_str = datetime.fromtimestamp(start_unix).strftime("%I:%M %p").lstrip("0")
+        weekday_presence_matrix[day][week_key] = arrival_time_str
 
     sorted_week_columns = sorted(all_week_keys)
 

@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import (
     QTableWidgetItem, QCompleter, QComboBox, QTextEdit, QFrame, QMenu,
     QCheckBox, QDoubleSpinBox
 )
+from PyQt5.QtGui import QColor
 
 import qdarkstyle
 
@@ -49,25 +50,32 @@ class WeeklyFocusTab(QWidget):
         label = QLabel("📊 Weekly Focus")
         label.setStyleSheet("font-size: 24px; font-weight: bold;")
 
-        table = QTableWidget()
-        table.setColumnCount(6)
-        table.setHorizontalHeaderLabels(["Day", "Avg Students", "Std Dev", "Variance", "Avg Lowerbelts", "Avg Upperbelts"])
-
         data = get_weekly_focus()
-        table.setRowCount(len(data))
+        for table_name, table_content in data.items():
+            print(table_name)
+            label = QLabel(f"{table_name}")
+            label.setStyleSheet("font-size: 18px; font-weight: bold;")
 
-        for row_idx, row in enumerate(data):
-            table.setItem(row_idx, 0, QTableWidgetItem(row["day"]))
-            table.setItem(row_idx, 1, QTableWidgetItem(str(row["avg_total"] or "—")))
-            table.setItem(row_idx, 2, QTableWidgetItem(str(row["std_dev"] or "—")))
-            table.setItem(row_idx, 3, QTableWidgetItem(str(row["variance"] or "—")))
-            table.setItem(row_idx, 4, QTableWidgetItem(str(row["avg_lower"] or "—")))
-            table.setItem(row_idx, 5, QTableWidgetItem(str(row["avg_upper"] or "—")))
+            table = QTableWidget()
+            table.setColumnCount(4)
+            table.setHorizontalHeaderLabels(["Day", "Avg Students", "Std Dev", "Variance"])
 
-        layout.addWidget(label)
-        layout.addWidget(table)
-        self.setLayout(layout)
-        table.resizeColumnsToContents()
+
+            table.setRowCount(len(table_content))
+            print(table_content)
+            for row_idx, row in enumerate(table_content):
+                print(row_idx)
+                print(row)
+                print(row["day"])
+                table.setItem(row_idx, 0, QTableWidgetItem(row["day"]))
+                table.setItem(row_idx, 1, QTableWidgetItem(str(row["avg_total"] or "—")))
+                table.setItem(row_idx, 2, QTableWidgetItem(str(row["std_dev"] or "—")))
+                table.setItem(row_idx, 3, QTableWidgetItem(str(row["variance"] or "—")))
+
+            layout.addWidget(label)
+            layout.addWidget(table)
+            self.setLayout(layout)
+            table.resizeColumnsToContents()
 
 
 class StudentFocusTab(QWidget):
@@ -242,7 +250,11 @@ class StudentFocusTab(QWidget):
             self.weekly_matrix_table.setItem(i, 0, QTableWidgetItem(day))
             for j, week in enumerate(week_columns):
                 present = matrix.get(day, {}).get(week, False)
-                item = QTableWidgetItem("✅" if present else "❌")
+                if present:
+                    item = QTableWidgetItem(f"✅ {present}")
+                    item.setBackground(QColor("darkgreen"))  # or QColor(144, 238, 144)
+                else:
+                    item = QTableWidgetItem("❌")
                 self.weekly_matrix_table.setItem(i, j + 1, item)
 
         self.weekly_matrix_table.resizeColumnsToContents()
@@ -422,7 +434,7 @@ class AdminFocusTab(QWidget):
 
         # Mini version of the Weekly Focus table
         weekly_table = QTableWidget()
-        weekly_data = get_weekly_focus()
+        weekly_data = get_weekly_focus()["allstudent"]
         weekly_table.setColumnCount(3)
         weekly_table.setHorizontalHeaderLabels(["Day", "Avg", "Std Dev"])
         weekly_table.setRowCount(len(weekly_data))
