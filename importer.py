@@ -86,8 +86,7 @@ for file_path in glob("data/*.csv"):
                     belt in upper_belts
                 ))
         else:
-            print("No StudentAccessReport files found, failing now.")
-            raise(FileNotFoundError("No StudentAccessReport files found, expecting filename'*StudentAccessReport*.csv'"))
+            pass
 
 conn.commit()
 conn.close()
