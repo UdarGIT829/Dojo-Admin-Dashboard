@@ -53,8 +53,8 @@ It is aimed at instructors and administrators who need a quick, data‑driven sn
 
 ```bash
 # Clone the repository
-$ git clone https://github.com/your‑org/attendance‑manager.git
-$ cd attendance‑manager
+$ git clone https://github.com/UdarGIT829/Dojo-Admin-Dashboard.git
+$ cd Dojo-Admin-Dashboard
 
 # Create & activate a virtual environment (recommended)
 $ python -m venv .venv
@@ -88,7 +88,12 @@ The main window opens with the Weekly Focus tab selected by default.
 ## Directory Structure
 
 ```
-attendance‑manager/
+Dojo-Admin-Dashboard/
+├── data/
+|   ├── *StudentAccessReport*.csv           # Multiples are handled without duplicate entries
+|   ├── ...
+|   └── *Membership*.csv                    # Inventory of all Special case belts (Junior belt override)
+|    
 ├── Admin_Focus.py                          # Admin utilities and bulk tools
 ├── Student_Focus.py                        # Student dashboard widgets
 ├── Weekly_Focus.py                         # Weekly matrix & date‑range widgets
@@ -112,6 +117,7 @@ attendance‑manager/
 | Weekly Focus          | ![Weekly Focus Tab](docs/screenshots/Weekly_Focus.png)                 |
 | Student Focus         | ![Student Focus Tab](docs/screenshots/Student_Focus.png)               |
 | Admin Focus           | ![Admin Focus Tab](docs/screenshots/Admin_Focus.png)                   |
+| Acceptable File Inputs| ![File Inputs](docs/screenshots/File_Inputs.png)                       |
 
 
 ---
