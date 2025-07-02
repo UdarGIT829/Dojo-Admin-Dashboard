@@ -19,8 +19,8 @@ async def iterate_over_guild(guilds, log_file= None):
             log_file.write(f"  📁 Channel: #{channel.name} ({channel.id})\n")
             if channel.name not in [
                 "ninjas", 
-                #"upper-belt", 
-                #"jrs"
+                "upper-belt", 
+                "jrs"
                 ]:
                 continue
 
