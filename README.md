@@ -108,8 +108,6 @@ Dojo-Admin-Dashboard/
 
 ---
 
-## Screenshots *(placeholders)*
-
 ## Screenshots
 
 | View                  | Screenshot                                                             |
