@@ -239,7 +239,7 @@ if __name__ == "__main__":
             print(f"Log saved to {logfile_name}")
             if not args.apply:
                 print("This was a dry run, check the log file then rerun this command with '--apply'")
-                print("python discord_utils.py --apply")
+                print("python all_threads_24hr.py --apply")
                 print()
 
             await _client.close()
